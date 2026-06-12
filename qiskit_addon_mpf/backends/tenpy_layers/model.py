@@ -1,6 +1,6 @@
 # This code is a Qiskit project.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024, 2025.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -37,9 +37,6 @@ class LayerModel(CouplingMPOModel, NearestNeighborModel):
 
         See :external:meth:`~tenpy.models.model.CouplingMPOModel.init_sites` for more details.
 
-        .. caution::
-           Currently, this enforces ``Sz`` conservation on all sites.
-
         Args:
             model_params: the model parameters.
 
@@ -48,8 +45,6 @@ class LayerModel(CouplingMPOModel, NearestNeighborModel):
         """
         # WARN: we use our own default to NOT sort charges (contrary to TeNPy default: `True`)
         sort_charge = model_params.get("sort_charge", False, bool)
-        # TODO: currently, this default Sz conservation is coupled to the LegCharge definition in
-        # MPOState.initialize_from_lattice. Not conserving Sz errors with 'Different ChargeInfo'.
         conserve = model_params.get("conserve", "Sz", str)
         return SpinHalfSite(conserve=conserve, sort_charge=sort_charge)
 
@@ -107,19 +102,20 @@ class LayerModel(CouplingMPOModel, NearestNeighborModel):
     def from_quantum_circuit(
         cls,
         circuit: QuantumCircuit,
-        *,
-        scaling_factor: float = 1.0,
         **kwargs,
     ) -> LayerModel:
         """Construct a :class:`LayerModel` from a :external:class:`~qiskit.circuit.QuantumCircuit`.
 
         You can see an example of this function in action in the docs of :mod:`tenpy_layers`.
 
+        .. note::
+           By default, TeNPy tries to enforce spin-conservation and, thus, some operations may not
+           be available. If you encounter an error stating that some operator (e.g. ``Sx``) is not
+           available, try specifying ``conserve="None"``. If that still does not work, converting
+           your specific ``QuantumCircuit`` is currently not possible using this implementation.
+
         Args:
             circuit: the quantum circuit to parse.
-            scaling_factor: a factor with which to scale the term strengths. This can be used to
-                apply (for example) a time step scaling factor. It may also be used (e.g.) to split
-                onsite terms into two layers (even and odd) with $0.5$ of the strength, each.
             kwargs: any additional keyword arguments to pass to the :class:`LayerModel` constructor.
 
         Returns:
@@ -136,19 +132,23 @@ class LayerModel(CouplingMPOModel, NearestNeighborModel):
             sites = [circuit.find_bit(qubit)[0] for qubit in instruction.qubits]
 
             # NOTE: the hard-coded scaling factors below account for the Pauli matrix conversion
-            if op.name == "rzz":
-                coupling_terms["Sz_i Sz_j"].append(
-                    (2.0 * scaling_factor * op.params[0], *sites, "Sz", "Sz", "Id")
+            if op.name in {"rxx", "ryy", "rzz"}:
+                s_p = f"S{op.name[-1]}"
+                coupling_terms[f"{s_p}_i {s_p}_j"].append(
+                    (
+                        2.0 * op.params[0],
+                        *sites,
+                        s_p,
+                        s_p,
+                        "Id",
+                    )
                 )
             elif op.name == "xx_plus_yy":
-                coupling_terms["Sp_i Sm_j"].append(
-                    (0.5 * scaling_factor * op.params[0], *sites, "Sp", "Sm", "Id")
-                )
-                coupling_terms["Sp_i Sm_j"].append(
-                    (0.5 * scaling_factor * op.params[0], *sites, "Sm", "Sp", "Id")
-                )
-            elif op.name == "rz":
-                onsite_terms["Sz"].append((2.0 * scaling_factor * op.params[0], *sites, "Sz"))
+                coupling_terms["Sp_i Sm_j"].append((0.5 * op.params[0], *sites, "Sp", "Sm", "Id"))
+                coupling_terms["Sp_i Sm_j"].append((0.5 * op.params[0], *sites, "Sm", "Sp", "Id"))
+            elif op.name in {"rx", "ry", "rz"}:
+                s_p = f"S{op.name[-1]}"
+                onsite_terms[s_p].append((op.params[0], *sites, s_p))
             else:
                 raise NotImplementedError(f"Cannot handle gate of type {op.name}")
 

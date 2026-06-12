@@ -30,7 +30,7 @@ class TestLayerModel:
         for i in range(0, L - 1, 2):
             qc.rzz(1.0, i, i + 1)
         for i in range(L):
-            qc.rz(1.0, i)
+            qc.rz(2.0, i)
         for i in range(1, L - 1, 2):
             qc.append(XXPlusYYGate(1.0), [i, i + 1])
 
@@ -80,11 +80,11 @@ class TestLayerModel:
             ),
         ]
         assert model.H_bond[0] is None
-        for expected, actual in zip(expected_H_bonds, model.H_bond[1:]):
+        for expected, actual in zip(expected_H_bonds, model.H_bond[1:], strict=True):
             np.testing.assert_allclose(expected, actual.to_ndarray().reshape((4, 4)))
 
     def test_handling_unsupportedown_gate(self):
         qc = QuantumCircuit(1)
-        qc.rx(1.0, 0)
+        qc.h(0)
         with pytest.raises(NotImplementedError):
             LayerModel.from_quantum_circuit(qc)

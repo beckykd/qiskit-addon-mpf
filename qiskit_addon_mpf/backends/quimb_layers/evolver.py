@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from quimb.tensor import MatrixProductOperator, MatrixProductState
+
 from .. import quimb_tebd
 from .model import LayerModel
 
@@ -28,13 +30,17 @@ class LayerwiseEvolver(quimb_tebd.TEBDEvolver):
     instances. Every single instance of these encodes a single **layer** of interactions. These
     should enforce the alternating updates of even and odd bonds of the underlying tensor network.
 
-    The motivation for this more complicated interface is that is provides a lot more flexbility and
-    enables users to define custom Trotter product formulas rather than being limited to the ones
-    implemented by ``quimb`` directly.
+    The motivation for this more complicated interface is that is provides a lot more flexibility
+    and enables users to define custom Trotter product formulas rather than being limited to the
+    ones implemented by ``quimb`` directly.
     """
 
     def __init__(
-        self, evolution_state: quimb_tebd.MPOState, layers: list[LayerModel], *args, **kwargs
+        self,
+        evolution_state: quimb_tebd.MPOState | MatrixProductState,
+        layers: list[LayerModel],
+        *args,
+        **kwargs,
     ) -> None:
         """Initialize a :class:`LayerwiseEvolver` instance.
 
@@ -51,6 +57,23 @@ class LayerwiseEvolver(quimb_tebd.TEBDEvolver):
         super().__init__(evolution_state, layers[0], *args, **kwargs)
         self.layers = layers
         """The layers of interactions used to implement the time-evolution."""
+        self._reverse_layers = isinstance(evolution_state, MatrixProductOperator)
+
+    @property
+    def reverse_layers(self) -> bool:
+        """Whether to reverse the layers.
+
+        This defaults to ``True`` when ``self.psi`` is an MPO and to ``False`` when it is an MPS.
+        This is necessary because the middle-out MPO contraction applies the circuits to an identity
+        initial state and contracts with the circuits intended initial state from the outside.
+        Therefore, the layers must be reversed to ensure the same circuit is computed as if it were
+        applied on top of the initial state.
+        """
+        return self._reverse_layers
+
+    @reverse_layers.setter
+    def reverse_layers(self, reverse_layers: bool) -> None:
+        self._reverse_layers = reverse_layers
 
     def step(self) -> None:
         # pylint: disable=attribute-defined-outside-init
@@ -62,14 +85,27 @@ class LayerwiseEvolver(quimb_tebd.TEBDEvolver):
         """
         dt = self._dt
 
-        for layer in self.layers:
+        # NOTE: support for MatrixProductState objects is only added for testing/debugging purposes!
+        # This is not meant for consumption by end-users of the `qiskit_addon_mpf.dynamic` module
+        # and its use is highly discouraged.
+        is_mps = isinstance(self._pt, MatrixProductState)
+
+        layer_order = range(len(self.layers))
+        if self.reverse_layers:
+            layer_order = reversed(layer_order)  # type: ignore[assignment]
+
+        for layer_idx in layer_order:
+            layer = self.layers[layer_idx]
             self.H = layer
             for i in range(self.L):
                 sites = (i, (i + 1) % self.L)
                 gate = self._get_gate_from_ham(1.0, sites)
                 if gate is None:
                     continue
-                self._pt.gate_split_(gate, sites, conj=self.conjugate, **self.split_opts)
+                if is_mps:
+                    self._pt.gate_split_(gate, sites, **self.split_opts)
+                else:
+                    self._pt.gate_split_(gate, sites, conj=self.conjugate, **self.split_opts)
 
         self.t += dt
         self._err += float("NaN")

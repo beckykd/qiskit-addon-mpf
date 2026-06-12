@@ -102,7 +102,7 @@ into a single circuit with barriers between them to ease the visualization).
    The asymmetry of the central layers is a result of the implementation of Qiskit's
    :external:class:`~qiskit.synthesis.SuzukiTrotter` formula. In its second-order form, it combines
    the two half-time evolutions of the final term in the Hamiltonian into a single one of twice the
-   length. We could transpile this circuit to collapse all such subequent gates in the central two
+   length. We could transpile this circuit to collapse all such subsequent gates in the central two
    layers (just like the last one), but for the sake of simplicity of this example, we will not do
    that here.
 
@@ -159,16 +159,15 @@ instead are split in half and applied to the bonds on either side, a layer of si
 acting on all qubits would break this assumption.
 
 To circumvent this problem, we can take any layer consisting of only single-qubit gates, and apply
-it twice (once on the even and once on the odd bonds) while scaling each one with a factor of
-``0.5``.
+it twice (once on the even and once on the odd bonds).
 
 .. plot::
    :context:
    :nofigs:
    :include-source:
 
-   >>> model1a = LayerModel.from_quantum_circuit(layers[1], keep_only_odd=True, scaling_factor=0.5)
-   >>> model1b = LayerModel.from_quantum_circuit(layers[1], keep_only_odd=False, scaling_factor=0.5)
+   >>> model1a = LayerModel.from_quantum_circuit(layers[1], keep_only_odd=True)
+   >>> model1b = LayerModel.from_quantum_circuit(layers[1], keep_only_odd=False)
    >>> layer_models.extend([model1a, model1b])
 
 Now that we know how to treat layers consisting of two-qubit and single-qubit gates, we can
@@ -185,10 +184,10 @@ transform the remaining layers.
    ...         layer_models.append(LayerModel.from_quantum_circuit(layer))
    ...     else:
    ...         layer_models.append(
-   ...             LayerModel.from_quantum_circuit(layer, keep_only_odd=True, scaling_factor=0.5)
+   ...             LayerModel.from_quantum_circuit(layer, keep_only_odd=True)
    ...         )
    ...         layer_models.append(
-   ...             LayerModel.from_quantum_circuit(layer, keep_only_odd=False, scaling_factor=0.5)
+   ...             LayerModel.from_quantum_circuit(layer, keep_only_odd=False)
    ...         )
    >>> assert len(layer_models) == 8
 
