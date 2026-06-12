@@ -1,8 +1,6 @@
-##########################################
-Qiskit addon: multi-product formulas (MPF)
-##########################################
-
-`Qiskit addons <https://quantum.cloud.ibm.com/docs/guides/addons>`_ are a collection of modular tools for building utility-scale workloads powered by Qiskit.
+#############################
+Multi-product formulas (MPF)
+#############################
 
 This package contains the Qiskit addon for multi-product formulas (MPFs).
 These can be used to reduce the Trotter error of Hamiltonian dynamics.
@@ -12,27 +10,22 @@ This package currently contains the following main entry points for users:
 - ``qiskit_addon_mpf.static`` for working with static MPFs [`1-2 <#references>`_].
 - ``qiskit_addon_mpf.dynamic`` for working with dynamic MPFs [`2-3 <#references>`_].
 
-Documentation
--------------
-
-All documentation is available `here <https://qiskit.github.io/qiskit-addon-mpf/>`_.
-
 Installation
 ------------
 
-We encourage installing this package via ``pip``, when possible:
+We encourage installing this package by using ``pip``, when possible:
 
 .. code-block:: bash
 
    pip install 'qiskit-addon-mpf'
 
 
-For more installation information refer to the `installation instructions <install.rst>`_ in the documentation.
+For more installation information refer to the `installation instructions <install.rst>`_.
 
 Optional dependencies
 +++++++++++++++++++++
 
-The ``qiskit-addon-mpf`` package has a number of optional dependencies which enable certain features.
+The ``qiskit-addon-mpf`` package has a number of optional dependencies the enable certain features.
 The dynamic MPF feature (see [`2-3 <#references>`_]) is one such example.
 You can install the related optional dependencies like so:
 
@@ -43,18 +36,18 @@ You can install the related optional dependencies like so:
 .. caution::
    The optional dependency `TeNPy <https://github.com/tenpy/tenpy>`_ was previously offered under a
    GPLv3 license.
-   As of the release of `v1.0.4 <https://github.com/tenpy/tenpy/releases/tag/v1.0.4>`_ on October
-   2nd, 2024, it has been offered under the Apache v2 license.
+   As of the release of `v1.0.4 <https://github.com/tenpy/tenpy/releases/tag/v1.0.4>`_ on 2 October
+   2024, it is offered under the Apache v2 license.
    The license of this package is only compatible with Apache-licensed versions of TeNPy.
 
 
-Deprecation Policy
+Deprecation policy
 ------------------
 
-We follow `semantic versioning <https://semver.org/>`_ and are guided by the principles in
+This addon follows `semantic versioning <https://semver.org/>`_ and is guided by the principles in
 `Qiskit's deprecation policy <https://github.com/Qiskit/qiskit/blob/main/DEPRECATION.md>`_.
-We may occasionally make breaking changes in order to improve the user experience.
-When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the
+It might occasionally make breaking changes in order to improve the user experience.
+When possible, old interfaces are kept and marked as deprecated, as long as they can co-exist with the
 new ones.
 Each substantial improvement, breaking change, or deprecation will be documented in the
 `release notes <https://qiskit.github.io/qiskit-addon-mpf/release-notes.html>`_.

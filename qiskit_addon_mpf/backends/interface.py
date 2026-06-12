@@ -77,7 +77,7 @@ class State(ABC):
         │          ┃ U4 ┃
         S4┄┄┄┄┄┄┄┄┄┺━━━━┹┄┄┄┄┄┄┄┄
 
-    However, in our case, we want two time-evolution engines to share a single state. In order to
+    However, in our case, we want two time-evolution engines to share a single state. to
     achieve that, we can have one of them evolve the state from the right (just as before, ``U#``),
     but have the second one evolve the state from the left (``V#``). This requires the state to also
     have bonds going of in that direction, rendering it a 2-dimensional MPO (``M#``) rather than the

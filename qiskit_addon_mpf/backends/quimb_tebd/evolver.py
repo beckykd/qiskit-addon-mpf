@@ -102,7 +102,7 @@ class TEBDEvolver(TEBD, Evolver):
         class, this is realized in the form of alternating "sweeps" in left and right directions
         over the internal state.
 
-        We are overwriting the behavior of this method in this subclass, in order to call the
+        We are overwriting the behavior of this method in this subclass, to call the
         specialized :meth:`~.quimb_tebd.MPOState.gate_split` method.
 
         Args:
